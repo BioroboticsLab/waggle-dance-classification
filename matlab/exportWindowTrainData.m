@@ -1,5 +1,9 @@
+% Geht eine WDD-Ordnerstruktur durch und erstellt aus den Tänzen, zu denen
+% Ground Truth Daten existieren eine Trainings- und eine
+% Validierungsmatrix. Dabei werden 80% der Tänze für die Trainingsmatrix
+% benutzt.
 clearvars
-folderPath='/Users/mehmedhalilovic/Documents/MATLAB/BA/GroundTruth13122015S';
+folderPath='/Users/mehmedhalilovic/Desktop/GroundTruth2015';
 folder = dir(folderPath);
 UD.currentImgFolder = 1;
 UD.imgFolders = {};
@@ -44,7 +48,6 @@ for d = folder'
                      P = W(:,:,1);
                      imageMatrix(k,:,:) = P;
                 end
-                
                 % Add Sliding-Window-Matrixes from all the images to the data.
                 p = rand;
                 zeros4D = uint8(zeros(numberOfImages-minWindow,minWindow,pixel,pixel));
@@ -73,16 +76,4 @@ for d = folder'
         end
     end
 end
-
-% irand = randperm(size(X_train,1));
-% featuresTrain = X_train(irand,:,:,:);
-% targetsTrain = Y_train(irand,:);
-% irand = randperm(size(X_test,1));
-% featuresTest = X_test(irand,:,:,:);
-% targetsTest = Y_test(irand,:);
-% borderTrainTest = size(X_train,1);
-% features = [featuresTrain; featuresTest];
-% targets = [targetsTrain; targetsTest];
-
-
-save('data2015S.mat', 'X_train', 'Y_train', 'X_test', 'Y_test', '-v7.3');
+save('data.mat', 'X_train', 'Y_train', 'X_test', 'Y_test', '-v7.3');

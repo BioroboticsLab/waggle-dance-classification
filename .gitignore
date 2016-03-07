@@ -1,1 +1,4 @@
 *.mat
+*.npy
+*.pyc
+*.png
