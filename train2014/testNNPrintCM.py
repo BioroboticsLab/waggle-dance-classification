@@ -1,3 +1,10 @@
+"""
+Traverses the WDD-Folder-Structure and for every dance with Ground-Truth-Data it updates the CM with the results of every window within the dance.
+The root of the WDD-Folder-Structure is given static inside the program code.
+Usage: testNNPrintCM <validationFolderRoot> <inputModelFile>
+:param validationFolderRoot: Root of the Validation Folder, which has dance folders with Ground Truth Data.
+:param inputModelFile: Weights that will be used for the neural network.
+"""
 import numpy as np
 import os
 import glob
@@ -11,6 +18,10 @@ from shutil import copytree
 
 
 def classify_dance(img_array):
+    """
+    Uses the neural network to give predictions for every single window of a dance.
+    :param img_array
+    """
     x_verify = []
     for i in range(img_array.shape[0]-30):
         x_verify.append(img_array[i:i+30,:,:])
@@ -21,10 +32,17 @@ def classify_dance(img_array):
 
 
 def update_confusion_matrix(predictions, CM, Y):
+    """
+    Updates the confusion matrices with the predictions of the windows of one dance, by using a border of 0.5
+    :param predictions: predictions of the dance
+    :param CM: confusion matrix (2,2) that will be updated
+    :param Y: the actual class of the dance (0 or 1)
+    :return: updated confusion matrix
+    """
     print(predictions)
     for i in predictions[:,1]:
         border = 0.5
-	mean = i;
+        mean = i
         if mean < border:
             if Y == 0:
                 CM[1, 1] += 1
@@ -38,19 +56,23 @@ def update_confusion_matrix(predictions, CM, Y):
     return CM
 
 
+# Get input arguments
+validationFolderRoot = sys.argv[1]
+inputModelFile = sys.argv[2]
 
-kM = kerasModel.KerasModel();
+print 'Validation folder root is "', validationFolderRoot
+print 'Input model file is "', inputModelFile
+
+kM = kerasModel.KerasModel()
 model = kM.getModel()
+model.load_weights(inputModelFile)
 
-model.load_weights('my_model_weights_0103w.h5')
-
-#Test model
 # Init Confusion Matrix
 CM = np.zeros((2,2))
 progress = 0
-# traverse folder structure and build matrix for every single dance so that CNN can test it
+# Traverse folder structure and build matrix for every single dance so that CNN can test it
 # Set the directory you want to start from
-rootDir = '/home/mehmed/Desktop/GTV2014relooked'
+rootDir = validationFolderRoot
 for dirName, subdirList, fileList in os.walk(rootDir):
     print('Found directory: %s' % dirName)
     if 'gt.csv' in fileList:
@@ -74,4 +96,4 @@ for dirName, subdirList, fileList in os.walk(rootDir):
             CM = update_confusion_matrix(pred, CM, Y)
             progress += 1;
             print(progress)
-	print(CM)
+    print(CM)

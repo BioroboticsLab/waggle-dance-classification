@@ -1,16 +1,32 @@
-# Trains the keras model of the neural network with a Train matrix within a .mat file.
-# The name of the .mat-file, the resulting model-weights and the number of epochs is still written static inside the program code.
-import scipy.io as sio
+"""
+Trains the Keras model of the neural network in kerasModel.py.
+Usage: train2DImageGenerator <trainFile> <numberOfEpochs> <outputModelFile> <inputModelFile>
+:param trainFile: The .mat - file where Train and Validation Matrix for Training can be found
+:param numberOfEpochs: Number of Epochs for the training of the neural network
+:param outputModelFile: The name of the file where the weights will be saved. Should end with .h5
+:param inputModelFile: Weights will be initialized with the weights from this file. If Errors during
+        initialization occur, there will be a warning and they will be ignored.
+"""
 import numpy as np
 import h5py
 import kerasModel
+import sys
 
 from keras.utils import np_utils, generic_utils
-from keras.preprocessing import image
 from keras.preprocessing.image import ImageDataGenerator
 
+trainFile = sys.argv[1]
+numberOfEpochs = int(sys.argv[2])
+outputModelFile = sys.argv[3]
+inputModelFile = sys.argv[4]
+
+print 'Input model file is "', inputModelFile
+print 'Output model file is "', outputModelFile
+print 'Train file is "', trainFile
+print 'Number of Epocs is "', numberOfEpochs
+
 # Load and prepare training data
-f = h5py.File('dataTrain.mat')
+f = h5py.File(trainFile)
 X_train = np.array(f['X_train']).transpose()
 Y_train = np.array(f['Y_train'])[0]
 X_test = np.array(f['X_test']).transpose()
@@ -39,11 +55,14 @@ datagen.fit(X_train)
 kM = kerasModel.KerasModel();
 model = kM.getModel()
 
-# model.load_weights('my_model_weights_210115_trainborder.h5')
+try:
+    model.load_weights(inputModelFile)
+except: #catch all exceptions
+    print('Error during initialization of weights. Ignoring...')
+    pass
 
 # Train model
-nb_epoch = 42
-
+nb_epoch = numberOfEpochs
 for e in range(nb_epoch):
     print('Epoch', e)
     progbar = generic_utils.Progbar(X_train.shape[0])
@@ -55,5 +74,4 @@ for e in range(nb_epoch):
     loss, accuracy = model.evaluate(X_test, Y_test, batch_size=128, show_accuracy=True, verbose=0)
     progbarTest.add(X_test.shape[0], values=[("val_loss", loss), ("val_acc", accuracy)])
 
-
-model.save_weights('my_model_weights.h5')
+model.save_weights(outputModelFile)

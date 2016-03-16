@@ -4,22 +4,26 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.utils import np_utils
 
 
-class  KerasModel:
+class KerasModel:
     """Model of a neuronal network"""
 
     def __init__(self):
         self.data = []
 
     def getModel(self):
+        """
+        Returns the model of the neural network.
+        :return:
+        """
         # Data dimensions
         rows, cols = 20, 20
         image_count = 30
 
-        # number of convolutional filters to use
+        # Number of convolutional filters to use
         nb_filters = 8
-        # size of pooling area for max pooling
+        # Size of pooling area for max pooling
         nb_pool = 2
-        # convolution kernel size
+        # Convolution kernel size
         nb_conv = 3
 
         # Define model of neural net
