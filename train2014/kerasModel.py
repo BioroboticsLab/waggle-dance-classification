@@ -9,6 +9,9 @@ class KerasModel:
 
     def __init__(self):
         self.data = []
+        self.rows = 20
+        self.cols = 20
+        self.image_count = 20
 
     def getModel(self):
         """
@@ -16,15 +19,8 @@ class KerasModel:
         :return:
         """
         # Data dimensions
-        rows, cols = 20, 20
-        image_count = 30
-
-        # Number of convolutional filters to use
-        nb_filters = 8
-        # Size of pooling area for max pooling
-        nb_pool = 2
-        # Convolution kernel size
-        nb_conv = 3
+        rows, cols = self.rows, self.cols
+        image_count = self.image_count
 
         # Define model of neural net
         model = Sequential()
@@ -33,11 +29,11 @@ class KerasModel:
                                 border_mode='same',
                                 input_shape=(image_count, rows, cols)))
         model.add(Activation('relu'))
-        model.add(Convolution2D(nb_filters, nb_conv, nb_conv))
+        model.add(Convolution2D(8, 3, 3))
         model.add(Activation('relu'))
         model.add(Convolution2D(8,5,5))
         model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool)))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
 
         model.add(Flatten())
@@ -59,3 +55,5 @@ class KerasModel:
         model.compile(loss='categorical_crossentropy', optimizer='adadelta')
         return model;
 
+    def get_image_count(self):
+        return self.image_count;
