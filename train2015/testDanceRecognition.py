@@ -2,7 +2,7 @@
 Tests the dance recognition of the neural network with trained weights by drawing a ROC-Graph. In order to do so it
 traverses through the WDD-Folder-Structure and uses every dance for which Ground-Truth-Data exists. The trained network
 is used to classify every dance with borders from 0 to 1, in order to test the net for different borders.
-Finally the ROC-Graph is plotted. 
+Finally the ROC-Graph is plotted.
 Usage: testDanceRecognition <validationFolderRoot> <inputModelFile>
 :param validationFolderRoot: Root of the Validation Folder, which has dance folders with Ground Truth Data.
 :param inputModelFile: Weights that will be used for the neural network.
@@ -15,23 +15,9 @@ import csv
 import kerasModel
 import sys
 import matplotlib.pyplot as plt
-
 from keras.utils import np_utils
 from shutil import copytree
-
-
-def classify_dance(img_array):
-    """
-    Uses the neural network to give predictions for every single window of a dance.
-    :param img_array
-    """
-    x_verify = []
-    for i in range(img_array.shape[0]-30):
-        x_verify.append(img_array[i:i+30,:,:])
-    x_verify = np.asarray(x_verify)
-    x_verify = x_verify.astype("float32")
-    x_verify /= 255
-    return model.predict(x_verify, batch_size=128, verbose=0)
+from helperFunctions import classify_dance
 
 
 def update_confusion_matrix(predictions, CM, Y):
@@ -85,48 +71,53 @@ def plot_roc_points(CM):
     plt.title('ROC')
     plt.grid(True)
     plt.plot([0, 1], [0, 1], 'r--')
-    plt.show()
+    plt.savefig('foo.png', bbox_inches='tight')
 
 
-# Get input arguments
-validationFolderRoot = sys.argv[1]
-inputModelFile = sys.argv[2]
+def main():
+    # Get input arguments
+    validationFolderRoot = sys.argv[1]
+    inputModelFile = sys.argv[2]
+    
+    print('Validation folder root is "', validationFolderRoot)
+    print('Input model file is "', inputModelFile)
 
-print 'Validation folder root is "', validationFolderRoot
-print 'Input model file is "', inputModelFile
-
-# Load the Keras model and the model weight
-kM = kerasModel.KerasModel();
-model = kM.getModel()
-model.load_weights(inputModelFile)
-
-# Init Confusion Matrices
-CM = np.zeros((100,2,2))
-progress = 0
-# Traverse folder structure and build matrix for every single dance so that CNN can test it. In the end plot ROC-Graph
-rootDir = validationFolderRoot
-for dirName, subdirList, fileList in os.walk(rootDir):
-    print('Found directory: %s' % dirName)
-    if 'gt.csv' in fileList:
-        with open(dirName+'/gt.csv', 'rb') as csvfile:
-            spamReader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            Y = 0
-            for row in spamReader:
-                Y = row[0]
-            if Y == 'j':
-                Y = 1
-            elif Y == 'n':
+    # Load the Keras model and the model weight
+    kM = kerasModel.KerasModel();
+    model = kM.getModel()
+    model.load_weights(inputModelFile)
+    
+    # Init Confusion Matrix
+    CM = np.zeros((100,2,2))
+    progress = 0
+    # Traverse folder structure and build matrix for every single dance so that CNN can test it
+    rootDir = validationFolderRoot
+    for dirName, subdirList, fileList in os.walk(rootDir):
+        print('Found directory: %s' % dirName)
+        if 'gt.csv' in fileList:
+            with open(dirName+'/gt.csv', 'rt') as csvfile:
+                spamReader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                 Y = 0
-            else:
-                Y = -1
-            image_list = []
-            for fname in glob.glob(dirName + '/image*.png'):
-                im = scipy.misc.imread(fname)[:, :, 1]
-                image_list.append(im)
-            image_array = np.asarray(image_list)
-            pred = classify_dance(image_array)
-            CM = update_confusion_matrix(pred, CM, Y)
-            progress += 1
-            print(progress)
-plot_roc_points(CM)
+                for row in spamReader:
+                    Y = row[0]
+                if Y == 'j':
+                    Y = 1
+                elif Y == 'n':
+                    Y = 0
+                else:
+                    Y = -1
+                    continue
+                image_list = []
+                for fname in glob.glob(dirName + '/image*.png'):
+                    im = scipy.misc.imread(fname)[:, :, 1]
+                    image_list.append(im)
+                image_array = np.asarray(image_list)
+                pred = classify_dance(image_array, model, kM.get_image_count())
+                CM = update_confusion_matrix(pred, CM, Y)
+                progress += 1;
+                print(progress)
+    plot_roc_points(CM);
 
+
+if __name__=="__main__":
+    main()

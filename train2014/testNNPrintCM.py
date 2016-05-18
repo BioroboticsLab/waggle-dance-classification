@@ -21,7 +21,7 @@ from helperFunctions import classify_dance
 
 def update_confusion_matrix(predictions, CM, Y):
     """
-    Updates the confusion matrices with the predictions of the windows of one dance, by using a border of 0.5
+    Updates the confusion matrices with the predictions of the windows of one dance, by using a fixed border
     :param predictions: predictions of the dance
     :param CM: confusion matrix (2,2) that will be updated
     :param Y: the actual class of the dance (0 or 1)
@@ -29,7 +29,7 @@ def update_confusion_matrix(predictions, CM, Y):
     """
     print(predictions)
     for i in predictions[:,1]:
-        border = 0.5
+        border = 0.35
         mean = i
         if mean < border:
             if Y == 0:

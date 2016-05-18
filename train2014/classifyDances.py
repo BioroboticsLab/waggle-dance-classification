@@ -19,7 +19,7 @@ from helperFunctions import classify_dance
 
 def update_confusion_matrix(predictions, CM, dirName, resultFolder):
     """
-    Updates the confusion matrix with the predictions of the windows of one dance, by using border 0.5.
+    Updates the confusion matrix with the predictions of the windows of one dance, by using a fixed value for the border.
     Copies positively classified dances into the result folder.
     :param predictions: predictions of the dance
     :param CM: confusion matrix (2,2) that will be updated
@@ -28,7 +28,7 @@ def update_confusion_matrix(predictions, CM, dirName, resultFolder):
     """
     predictions_sum = np.sum(predictions, axis=0, dtype="float32")[1]
     mean = predictions_sum/len(predictions)
-    border = 0.5
+    border = 0.35
     if mean < border:
         CM[0] += 1
     else:
@@ -57,6 +57,7 @@ def main():
     # Set the directory you want to start from
     rootDir = wddOutputRoot
     for dirName, subdirList, fileList in os.walk(rootDir):
+        print(dirName)
         if 'orient.png' in fileList:
                 image_list = []
                 for fname in glob.glob(dirName + '/image*.png'):

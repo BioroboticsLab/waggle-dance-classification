@@ -71,5 +71,5 @@ else:
 # Train model
 nb_epoch = numberOfEpochs
 
-model.fit_generator(generator=datagen.flow(X_train, Y_train, batch_size=32), nb_epoch=numberOfEpochs, samples_per_epoch=train_samples, verbose=1, show_accuracy=True, validation_data=(X_test, Y_test), class_weight={0:1, 1:8})
+model.fit_generator(generator=datagen.flow(X_train, Y_train, batch_size=32), nb_epoch=numberOfEpochs, samples_per_epoch=train_samples, verbose=1, validation_data=(X_test, Y_test), class_weight={0:1, 1:1})
 model.save_weights(outputModelFile)
