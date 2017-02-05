@@ -8,7 +8,8 @@ Y = [];
 q = [];
 save(output_filename, 'X', 'Y', 'q', '-v7.3');
 matfile_obj = matfile(output_filename, 'Writable', true);
-nBatchExport = 200;
+nBatchExport = 100;
+nCount = nBatchExport;
 
 fprintf('\n\n\n')
 
@@ -46,8 +47,8 @@ for d = folder_obj'
                 X = [X; dX];
                 Y = [Y; dY];
                 
-                if nBatchExport > 0
-                    nBatchExport = nBatchExport-1;
+                if nCount > 0
+                    nCount = nCount-1;
                 else
                     % concatenate with previously stored data
                     if isempty(matfile_obj.q)
@@ -62,7 +63,7 @@ for d = folder_obj'
                         matfile_obj.Y(idxNew, 1) = Y;
                         X = [];
                         Y = [];
-                        nBatchExport = 100;
+                        nCount = nBatchExport;
                     end
                 end
                     
