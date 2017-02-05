@@ -8,7 +8,7 @@ Y = [];
 q = [];
 save(output_filename, 'X', 'Y', 'q', '-v7.3');
 matfile_obj = matfile(output_filename, 'Writable', true);
-nBatchExport = 100;
+nBatchExport = 200;
 
 fprintf('\n\n\n')
 
@@ -72,19 +72,30 @@ for d = folder_obj'
     end
 end
 
-nData       = size(matfile_obj.X, 1);
+nData       = size(matfile_obj, 'Y', 1);
 idxSplit    = floor(train_proportion * nData);
+perm        = randperm(nData);
+j = perm(1);
+matfile_obj.X_test = matfile_obj.X(j, :, :, :);
+matfile_obj.Y_test = matfile_obj.Y(j,1);
+matfile_obj.X_train = matfile_obj.X(j, :, :, :);
+matfile_obj.Y_train = matfile_obj.Y(j,1);
 
-% shuffle data
-perm            = randperm(nData);
-matfile_obj.X   = matfile_obj.X(perm, :, :, :);
-matfile_obj.Y   = matfile_obj.Y(perm);
+% shuffle and split in train and test set
 
-% split in train and test set
-matfile_obj.X_train = matfile_obj.X(1:idxSplit, :, :, :);
-matfile_obj.Y_train = matfile_obj.Y(1:idxSplit);
-matfile_obj.X_test  = matfile_obj.X(idxSplit+1:end, :, :, :);
-matfile_obj.Y_test  = matfile_obj.Y(idxSplit+1:end);
+for i = 2 : nData
+    j = perm(i);
+    
+    if i > idxSplit
+        matfile_obj.X_test(i, :, :, :)  = matfile_obj.X(j, :, :, :);
+        matfile_obj.Y_test(i, 1)           = matfile_obj.Y(j, 1);
+    else
+        matfile_obj.X_train(i, :, :, :)  = matfile_obj.X(j, :, :, :);
+        matfile_obj.Y_train(i, 1)           = matfile_obj.Y(j, 1);
+    end
+end
+
+
 
 % save(output_filename, 'X_train', 'Y_train', 'X_test', 'Y_test');
 
