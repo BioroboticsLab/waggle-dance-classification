@@ -7,6 +7,7 @@ X = [];
 Y = [];
 save(output_filename, 'X', 'Y' ,'-v7.3');
 matfile_obj = matfile(output_filename, 'Writable', true);
+nBatchExport = 100;
 
 fprintf('\n\n\n')
 
@@ -40,18 +41,30 @@ for d = folder_obj'
                 % prepare data structures for current waggle run
                 [dX] = createSlidingWindowTensor(ImageTensor, windowSize);
                 dY = repmat(L, size(dX, 1), 1);
+
+                X = [X; dX];
+                Y = [Y; dY];
                 
-                % concatenate with previously stored data
-                if isempty(matfile_obj.X)
-                    matfile_obj.X = dX;
-                    matfile_obj.Y = dY;
+                if nBatchExport > 0
+                    nBatchExport = nBatchExport-1;
                 else
-                    deltaSize   = size(dY, 1);
-                    curSize     = size(matfile_obj.Y, 1);
-                    idxNew      = curSize+1 : curSize + deltaSize;
-                    matfile_obj.X(idxNew, :, :, :) = dX;
-                    matfile_obj.Y(idxNew, 1) = dY;             
+                    % concatenate with previously stored data
+                    if isempty(matfile_obj.X)
+                        matfile_obj.X = X;
+                        matfile_obj.Y = Y;
+                    else
+                        deltaSize   = size(Y, 1);
+                        curSize     = size(matfile_obj.Y, 1);
+                        idxNew      = curSize+1 : curSize + deltaSize;
+                        matfile_obj.X(idxNew, :, :, :) = X;
+                        matfile_obj.Y(idxNew, 1) = Y;
+                        X = [];
+                        Y = [];
+                        nBatchExport = 100;
+                    end
                 end
+                    
+                
             end
         end
     end
@@ -80,7 +93,7 @@ function M = createSlidingWindowTensor(ImageTensor, windowSize)
 [nFrames, imgDim, ~] = size(ImageTensor);
 nWindows = (nFrames - windowSize) + 1;
 M = uint8(zeros(nWindows, windowSize, imgDim, imgDim));
-for k = 1 : nWindows  % ISSUE: should be +1
+for k = 1 : nWindows 
 	M(k, :, :, :) = ImageTensor(k : k+windowSize-1, :, :);
 end
 
