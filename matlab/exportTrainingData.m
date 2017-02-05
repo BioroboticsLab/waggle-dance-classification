@@ -1,64 +1,77 @@
 function [] = exportTrainingData(source_folder, windowSize, train_proportion)
-output_filename = 'train_test.mat'
+output_filename = 'train_test.mat';
 folder_obj  = dir(source_folder);
 nDirs       = length(folder_obj);
 progress    = 0;
-X = []; 
+X = [];
 Y = [];
+save(output_filename, 'X', 'Y' ,'-v7.3');
+matfile_obj = matfile(output_filename, 'Writable', true);
+
+fprintf('\n\n\n')
+
 % Traverse folder structure
 % first level corresponds to hour-minute-cam_id
-fprintf('\n\n\n')
 for d = folder_obj' 
-progress = progress+1;
-clearCharactersFromConsole(3);
-fprintf('%2d%%', round(100*progress/nDirs));
+    progress = progress+1;
+    clearCharactersFromConsole(3);
+    fprintf('%2d%%', round(100*progress/nDirs));
 
     if d.isdir && ~strcmp(d.name,'.') && ~strcmp(d.name,'..')
         subpath         = fullfile(source_folder, d.name);
         subfolder_obj   = dir(subpath);
+        
         % second level corresponds to sequence number of waggle run 
         for f = subfolder_obj'
             
             if f.isdir && ~strcmp(f.name,'.') && ~strcmp(f.name,'..')
-                imgfolder_path = fullfile(subpath, f.name);
+                imgfolderPath = fullfile(subpath, f.name);
                 
                 % load label from ground truth file
-                L = loadGroundTruth(imgfolder_path);
+                L = loadGroundTruth(imgfolderPath);
                 
                 % go to next folder if no ground truth could be found
                 if L < 0 
                     continue;
                 end
                 
-                ImageTensor = loadImages(imgfolder_path);
+                ImageTensor = loadImages(imgfolderPath);
                 
-                % prepare data structures for current dance
+                % prepare data structures for current waggle run
                 [dX] = createSlidingWindowTensor(ImageTensor, windowSize);
                 dY = repmat(L, size(dX, 1), 1);
                 
-                % add this on the current batch
-                X = [X; dX];
-                Y = [Y; dY];             
+                % concatenate with previously stored data
+                if isempty(matfile_obj.X)
+                    matfile_obj.X = dX;
+                    matfile_obj.Y = dY;
+                else
+                    deltaSize   = size(dY, 1);
+                    curSize     = size(matfile_obj.Y, 1);
+                    idxNew      = curSize+1 : curSize + deltaSize;
+                    matfile_obj.X(idxNew, :, :, :) = dX;
+                    matfile_obj.Y(idxNew, 1) = dY;             
+                end
             end
         end
     end
 end
 
-nData = size(X, 1);
-idxSplit = floor(train_proportion * nData);
+nData       = size(matfile_obj.X, 1);
+idxSplit    = floor(train_proportion * nData);
 
 % shuffle data
-perm = randperm(nData);
-X = X(perm, :, :, :);
-Y = Y(perm);
+perm            = randperm(nData);
+matfile_obj.X   = matfile_obj.X(perm, :, :, :);
+matfile_obj.Y   = matfile_obj.Y(perm);
 
 % split in train and test set
-X_train = X(1:idxSplit, :, :, :);
-Y_train = Y(1:idxSplit);
-X_test  = X(idxSplit+1:end, :, :, :);
-Y_test  = Y(idxSplit+1:end);
+matfile_obj.X_train = matfile_obj.X(1:idxSplit, :, :, :);
+matfile_obj.Y_train = matfile_obj.Y(1:idxSplit);
+matfile_obj.X_test  = matfile_obj.X(idxSplit+1:end, :, :, :);
+matfile_obj.Y_test  = matfile_obj.Y(idxSplit+1:end);
 
-save(output_filename, 'X_train', 'Y_train', 'X_test', 'Y_test');
+% save(output_filename, 'X_train', 'Y_train', 'X_test', 'Y_test');
 
 
 % this function takes a sequence of images and creates a 4D tensor
