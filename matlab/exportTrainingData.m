@@ -5,7 +5,8 @@ nDirs       = length(folder_obj);
 progress    = 0;
 X = [];
 Y = [];
-save(output_filename, 'X', 'Y' ,'-v7.3');
+q = [];
+save(output_filename, 'X', 'Y', 'q', '-v7.3');
 matfile_obj = matfile(output_filename, 'Writable', true);
 nBatchExport = 100;
 
@@ -49,12 +50,13 @@ for d = folder_obj'
                     nBatchExport = nBatchExport-1;
                 else
                     % concatenate with previously stored data
-                    if isempty(matfile_obj.X)
+                    if isempty(matfile_obj.q)
                         matfile_obj.X = X;
                         matfile_obj.Y = Y;
+                        matfile_obj.q = 1;
                     else
                         deltaSize   = size(Y, 1);
-                        curSize     = size(matfile_obj.Y, 1);
+                        curSize     = size(matfile_obj, 'Y');
                         idxNew      = curSize+1 : curSize + deltaSize;
                         matfile_obj.X(idxNew, :, :, :) = X;
                         matfile_obj.Y(idxNew, 1) = Y;
